@@ -9,9 +9,13 @@ import (
 )
 
 func main() {
-	dict := dictionary.New()
-	reader := bufio.NewReader(os.Stdin)
+	dict, err := dictionary.New("dictionary/dictionary.json")
+	if err != nil {
+		fmt.Println("An error occured while initializing the dictionary : ", err)
+		return
+	}
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("Which action do you want to perform ? :")
 		fmt.Println("1. Add a word")
@@ -58,7 +62,11 @@ func actionAdd(d *dictionary.Dictionary, reader *bufio.Reader) {
 	definition, _ := reader.ReadString('\n')
 	definition = definition[:len(definition)-1]
 
-	d.Add(word, definition)
+	err := d.Add(word, definition)
+	if err != nil {
+		fmt.Println("Error while adding the word '", word, "' : ", err)
+		return
+	}
 	fmt.Println("Word '", word, "' added successfully !")
 
 }
@@ -81,7 +89,11 @@ func actionRemove(d *dictionary.Dictionary, reader *bufio.Reader) {
 	word, _ := reader.ReadString('\n')
 	word = word[:len(word)-1]
 
-	d.Remove(word)
+	err := d.Remove(word)
+	if err != nil {
+		fmt.Println("Error while removing the word '", word, "' : ", err)
+		return
+	}
 	fmt.Println("Word '", word, "' removed successfully !")
 }
 
@@ -100,12 +112,21 @@ func actionUpdate(d *dictionary.Dictionary, reader *bufio.Reader) {
 	newDefinition, _ := reader.ReadString('\n')
 	newDefinition = newDefinition[:len(newDefinition)-1]
 
-	d.Add(word, newDefinition)
+	err = d.Add(word, newDefinition)
+	if err != nil {
+		fmt.Println("Error while updating word '", word, "' : ", err)
+		return
+	}
 	fmt.Println("Word '", word, "' updated successfully!")
 }
 
 func actionList(d *dictionary.Dictionary) {
-	words, entries := d.List()
+	words, entries, err := d.List()
+
+	if err != nil {
+		fmt.Println("Error while listing the dictionary : ", err)
+		return
+	}
 
 	if len(words) == 0 {
 		fmt.Println("The dictionary is empty.")
