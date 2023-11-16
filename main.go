@@ -46,6 +46,7 @@ func main() {
 			actionUpdate(dict, reader)
 		case 6:
 			fmt.Println("Exiting the program ...")
+			dict.Stop() 
 			return
 		default:
 			fmt.Println("Invalid command. Please try again.")

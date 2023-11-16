@@ -16,26 +16,45 @@ func (e Entry) String() string {
 
 type Dictionary struct {
 	filePath string
+	addCh    chan addMethod
+	removeCh chan removeMethod
+	doneCh   chan struct{}
+}
+
+type addMethod struct {
+	word       string
+	definition string
+	resultCh   chan error
+}
+
+type removeMethod struct {
+	word     string
+	resultCh chan error
 }
 
 func New(filePath string) (*Dictionary, error) {
-	d := &Dictionary{filePath: filePath}
+	d := &Dictionary{
+		filePath: filePath,
+		addCh:    make(chan addMethod),
+		removeCh: make(chan removeMethod),
+		doneCh:   make(chan struct{}),
+	}
+
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		if err := os.WriteFile(filePath, []byte("{}"), 0644); err != nil {
 			return nil, err
 		}
 	}
+
+	go d.concurrentAddRemoveHandler()
+
 	return d, nil
 }
 
 func (d *Dictionary) Add(word string, definition string) error {
-	entries, err := d.readFromFile()
-	if err != nil {
-		return err
-	}
-
-	entries[word] = Entry{Definition: definition}
-	return d.writeToFile(entries)
+	resultCh := make(chan error)
+	d.addCh <- addMethod{word: word, definition: definition, resultCh: resultCh}
+	return <-resultCh
 }
 
 func (d *Dictionary) Get(word string) (Entry, error) {
@@ -52,13 +71,9 @@ func (d *Dictionary) Get(word string) (Entry, error) {
 }
 
 func (d *Dictionary) Remove(word string) error {
-	entries, err := d.readFromFile()
-	if err != nil {
-		return err
-	}
-
-	delete(entries, word)
-	return d.writeToFile(entries)
+	resultCh := make(chan error)
+	d.removeCh <- removeMethod{word: word, resultCh: resultCh}
+	return <-resultCh
 }
 
 func (d *Dictionary) List() ([]string, map[string]Entry, error) {
@@ -101,4 +116,54 @@ func (d *Dictionary) writeToFile(entries map[string]Entry) error {
 	}
 
 	return nil
+}
+
+func (d *Dictionary) concurrentAddRemoveHandler() {
+	for {
+		select {
+		case addMtd := <-d.addCh:
+			select {
+			case <-d.doneCh:
+				return
+			default:
+			}
+
+			entries, err := d.readFromFile()
+			if err != nil {
+				addMtd.resultCh <- err
+				continue
+			}
+			entries[addMtd.word] = Entry{Definition: addMtd.definition}
+			err = d.writeToFile(entries)
+			if err != nil {
+				addMtd.resultCh <- err
+				continue
+			}
+			addMtd.resultCh <- nil
+
+		case removeMtd := <-d.removeCh:
+			select {
+			case <-d.doneCh:
+				return
+			default:
+			}
+
+			entries, err := d.readFromFile()
+			if err != nil {
+				removeMtd.resultCh <- err
+				continue
+			}
+			delete(entries, removeMtd.word)
+			err = d.writeToFile(entries)
+			if err != nil {
+				removeMtd.resultCh <- err
+				continue
+			}
+			removeMtd.resultCh <- nil
+		}
+	}
+}
+
+func (d *Dictionary) Stop() {
+	close(d.doneCh)
 }
