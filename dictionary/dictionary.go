@@ -34,6 +34,10 @@ func (d *Dictionary) Add(word string, definition string) error {
 		return err
 	}
 
+	if _, exists := entries[word]; exists {
+		return errors.New("Word already exists in the dictionary")
+	}
+
 	entries[word] = Entry{Definition: definition}
 	return d.writeToFile(entries)
 }
@@ -70,6 +74,11 @@ func (d *Dictionary) Remove(word string) error {
 	entries, err := d.readFromFile()
 	if err != nil {
 		return err
+	}
+
+	_, exists := entries[word]
+	if !exists {
+		return errors.New("Word not found in the dictionary")
 	}
 
 	delete(entries, word)

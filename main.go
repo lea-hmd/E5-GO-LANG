@@ -42,7 +42,7 @@ func RemoveWordHandler(d *dictionary.Dictionary) http.HandlerFunc {
 			return
 		}
 
-		fmt.Fprintf(w, "Word '%s' removed successfully!", word)
+		fmt.Fprintf(w, "Word '%s' removed successfully !", word)
 	}
 }
 
@@ -57,7 +57,7 @@ func GetWordHandler(d *dictionary.Dictionary) http.HandlerFunc {
 
 		entry, err := d.Get(word)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error getting definition for word '%s': %v", word, err), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Error getting definition for word '%s' : %v", word, err), http.StatusNotFound)
 			return
 		}
 
@@ -89,19 +89,19 @@ func AddWordHandler(d *dictionary.Dictionary) http.HandlerFunc {
 
 		err := d.Add(word, definition)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error adding word '%s': %v", word, err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error adding word '%s' : %v", word, err), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "Word '%s' added successfully!", word)
+		fmt.Fprintf(w, "Word '%s' added successfully !", word)
 	}
 }
 func ListWordsHandler(d *dictionary.Dictionary) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		words, entries, err := d.List()
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error listing words: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error listing words : %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -139,11 +139,11 @@ func UpdateWordHandler(d *dictionary.Dictionary) http.HandlerFunc {
 
 		err := d.Update(word, newDefinition)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error updating word '%s': %v", word, err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error updating word '%s' : %v", word, err), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Word '%s' updated successfully!", word)
+		fmt.Fprintf(w, "Word '%s' updated successfully !", word)
 	}
 }
