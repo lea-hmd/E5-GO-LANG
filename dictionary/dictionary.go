@@ -38,6 +38,21 @@ func (d *Dictionary) Add(word string, definition string) error {
 	return d.writeToFile(entries)
 }
 
+func (d *Dictionary) Update(word string, newDefinition string) error {
+	entries, err := d.readFromFile()
+	if err != nil {
+		return err
+	}
+
+	_, exists := entries[word]
+	if !exists {
+		return errors.New("Word not found in the dictionary")
+	}
+
+	entries[word] = Entry{Definition: newDefinition}
+	return d.writeToFile(entries)
+}
+
 func (d *Dictionary) Get(word string) (Entry, error) {
 	entries, err := d.readFromFile()
 	if err != nil {
