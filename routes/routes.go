@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"estiam/routes/middleware"
 	"estiam/dictionary"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 func AddRoutes(d *dictionary.Dictionary) *mux.Router {
 	router := mux.NewRouter()
 
+	router.Use(middleware.LoggingMiddleware)
 	router.HandleFunc("/api/word", AddWordHandler(d)).Methods("POST")
 	router.HandleFunc("/api/word/{word}", GetWordHandler(d)).Methods("GET")
 	router.HandleFunc("/api/word/{word}", RemoveWordHandler(d)).Methods("DELETE")
